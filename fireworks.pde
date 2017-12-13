@@ -2,6 +2,8 @@
 Fireworks toy.
 Click and drag to fire rockets.
 press C to clear the screen.
+press 1-6 to ready specific rocket types.
+press 7 to ready the balck hole rocket.
 */
 ArrayList<Body> world;
 
@@ -12,6 +14,7 @@ float phi = 1.61803398875;
 
 boolean sel;
 int next;
+boolean slingshotMode = true;
 
 void setup(){
   size(800, 600, FX2D);
@@ -20,7 +23,10 @@ void setup(){
   colorMode(HSB, 100);
 }
 void draw(){
-  background(0);
+  //background(0);
+  fill(0, 35); noStroke();
+  rect(0, 0, width, height );
+  
   for( int i = world.size()-1; i >= 0; i-- ){
     world.get(i).addForce(0, 0.02);
     if( world.get(i).tick() ) world.remove( i );
@@ -32,8 +38,14 @@ void draw(){
     fill( 0, 127, 255 );
     line( mouseX, mouseY, click.x, click.y );
     pushMatrix();
-    translate(mouseX, mouseY);
-    rotate( atan2(click.y - mouseY, click.x - mouseX ) );
+    if( slingshotMode ){   
+      translate(click.x, click.y);
+      rotate( atan2(mouseY-click.y, mouseX-click.x) );
+    }
+    else{
+      translate(mouseX, mouseY);
+      rotate( atan2(click.y - mouseY, click.x - mouseX ) );
+    }
     beginShape();
     vertex( 0, 0 );
     vertex( 6, -3 );
@@ -61,7 +73,13 @@ void mouseReleased(){
   else{
     type = round(random(-0.499, 6.499));
   }
-  world.add( new Rocket( click.x, click.y, k*(mouseX-click.x), k*(mouseY-click.y), 6, 60, type, col ) );
+  
+  if( slingshotMode ){
+    world.add( new Rocket( click.x, click.y, k*(click.x - mouseX), k*(click.y - mouseY), 6, 60, type, col ) );
+  }
+  else{
+    world.add( new Rocket( click.x, click.y, k*(mouseX-click.x), k*(mouseY-click.y), 6, 60, type, col ) );
+  }
   dragging = false;
 }
 void keyPressed(){
@@ -74,6 +92,7 @@ void keyPressed(){
              sel = true;
            }
   if( key == 'p' || key == 'P' ) save("print "+year()+"-"+month()+"-"+day()+" "+hour()+"."+minute()+"."+second()+".jpg");
+  if( key == 's' || key == 'S' ) slingshotMode = !slingshotMode;
 }
 
 //##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+##+||||
@@ -105,7 +124,7 @@ class Body{
     pos.add( vel );
   }
   void display(){}
-  
+  void display_black(){}
   boolean tick(){
     this.move();
     this.display();
@@ -153,6 +172,33 @@ class Rocket extends Body{
     
     popMatrix();
   }
+  void display_black(){
+    pushMatrix();
+    translate( pos.x, pos.y );
+    scale( 0.3 );
+    rotate( vel.heading() );
+    
+    noStroke();
+    fill( 0 );
+    
+    beginShape();
+    vertex(-20, -10);
+    vertex(-30, -20);
+    vertex(-50, -20);
+    vertex(-40, -10);
+    vertex(-40, 10);
+    vertex(-50, 20);
+    vertex(-30, 20);
+    vertex(-20, 10);
+    vertex(20, 10);
+    vertex(20, 20);
+    vertex(50, 0);
+    vertex(20, -20);
+    vertex(20, -10);
+    endShape(CLOSE);
+    
+    popMatrix();
+  }
   boolean tick(){
     if( fuse <= 0 ){
       generate_particles( pos, pattern_ID, colors );
@@ -160,6 +206,7 @@ class Rocket extends Body{
     }
     else{
       fuse--;
+      this.display_black();
       this.move();
       this.display();
       return false;
