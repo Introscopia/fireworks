@@ -3,7 +3,7 @@ Fireworks toy.
 Click and drag to fire rockets.
 press C to clear the screen.
 press 1-6 to ready specific rocket types.
-press 7 to ready the balck hole rocket.
+press 7 to ready the black hole rocket.
 */
 ArrayList<Body> world;
 
